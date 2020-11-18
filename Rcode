@@ -1,0 +1,122 @@
+
+
+# clear everything out of memory
+rm(list=ls())  
+getwd()
+dir_path <-"C:/Users/elnaj/Desktop/MSBA Classes/classes-FAll 2020/IDS 564 media netwrk analysis/final project"
+setwd(dir_path)
+myData <- read.table('ca-GrQc.txt.gz')
+str(myData)
+library(igraph)
+library(dplyr)
+
+#create graph 
+
+el <- CA.GrQc
+g_GRCN=graph.data.frame(el, directed = FALSE, vertices= NULL)
+
+################################
+#initial analysis
+################################
+
+# Edges result :28980
+ecount(g_GRCN)
+## Vertices result:5242
+vcount(g_GRCN)
+
+
+#Is it a simple graph? No!
+## Check whether Self_loops exist, as do multiple edges
+is.simple(g_GRCN)
+
+
+# check components 
+
+is_connected(g_GRCN)
+is_connected(g_GRCN, mode = "weak")
+is_connected(g_GRCN, mode = "strong")
+count_components(g_GRCN) #355 
+
+
+# so it's undirected--
+transitivity(g_GRCN)  #.6298
+# Avg. path length and diameter
+average.path.length(g_GRCN, directed=FALSE)  #6.0485
+
+diameter(g_GRCN, directed = FALSE)  #17
+# Summarize the graph structure
+summary(g_GRCN)  #5242 x 28980
+
+table(sapply(maximal.cliques(g_GRCN), length))
+# 1    2    3    4    5    6    7    8    9   10   11   12   13   14   15   16   18   20   21   22   24   26 
+# 1 1606 1394  594  182   52   28   13    9    4    1    4    2    1    1    1    2    1    1    1    1    1 
+# 32   34   35   43   44 
+# 1    1    1    2    1 
+
+######## for some of these larger ones, let's look deeper and try to understand what's going on in those
+
+largest_cliques(g_GRCN)   # these are the 42 vertices from the largest clique--plot these!!
+
+# [1] 21012 22691 773   14807 3372  21847 2741  24955 6610  25758 11241 570   6179  45    21281 23293 15003 20635
+# [19] 19423 18894 4164  7956  12365 17655 25346 1653  9785  21508 14540 12781 2212  19961 2952  6830  8879  11472
+# [37] 12496 12851 15659 17692 20108 20562 22887 4513
+
+
+
+
+
+############## triangles #########################
+transitivity(g_GRCN, type="global") #ratio of triangles (direction disregarded) to connected triples.
+#.62984
+mean(transitivity(g_GRCN, type="local")) # what does this do-check
+# triad types in this network #
+
+
+
+# mean degree
+
+mean(degree(g_GRCN))  #11.057
+
+# degrees- what is most prevalent in the network?
+max(degree.distribution(g_GRCN))  #.22835
+
+dd <- degree.distribution(g_GRCN)
+#filter the ones with zero
+str(dd)
+
+
+keep <- which(dd>0)
+n<- dd[keep]
+
+plot(n, xlim= c(1,50), col="blue", 
+     xlab= "Number of connections", main="Frequency of degrees in network- removing the zeroes", 
+     type="p")
+
+
+
+
+constraints_SAP <- round(constraint(g_GRCN, nodes=V(g_GRCN)), digits=4)
+# Degree centrality
+degree_sap <- degree(g_GRCN)
+# Node betweenness
+betweens_SAP <- round(betweenness(g_GRCN, v=V(g_GRCN), directed = FALSE, nobigint =TRUE, normalized = FALSE))
+# Edge betwenness
+edgebetweens_SAP<-edge.betweenness(g_GRCN, e=E(g_GRCN), directed = FALSE)
+# Local clustering coefficients
+clustering_SAP <- transitivity(g_GRCN, type="local", vids=V(g_GRCN)) 
+
+meas <- cbind(degree_sap, edgebetweens_SAP, constraints_SAP, betweens_SAP)
+round(cor(meas), 4)
+# degree_sap edgebetweens_SAP constraints_SAP betweens_SAP
+# degree_sap           1.0000          -0.0052         -0.6336       0.5170
+# edgebetweens_SAP    -0.0052           1.0000          0.0041      -0.0021
+# constraints_SAP     -0.6336           0.0041          1.0000      -0.4336
+# betweens_SAP         0.5170          -0.0021         -0.4336       1.0000
+
+
+
+
+
+
+
+
