@@ -12,7 +12,7 @@ library(dplyr)
 
 #create graph 
 
-el <- CA.GrQc
+el <- myData
 g_GRCN=graph.data.frame(el, directed = FALSE, vertices= NULL)
 
 ################################
