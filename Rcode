@@ -33,6 +33,11 @@ is.simple(g_GRCN)
 g_GRCN<-simplify(g_GRCN, edge.attr.comb="sum")
 summary(g_GRCN)
 
+num_weight<-E(g_GRCN)$weight 
+length(num_weight)    
+E(g_GRCN)$weight <-num_weight  # like this??
+
+
 # check components 
 
 is_connected(g_GRCN)
@@ -48,7 +53,7 @@ average.path.length(g_GRCN, directed=FALSE)  #6.0485
 
 diameter(g_GRCN, directed = FALSE)  #17
 # Summarize the graph structure
-summary(g_GRCN)  #5242 x 28980
+summary(g_GRCN)  #5242 x 28980 (14484 simplified)
 
 table(sapply(maximal.cliques(g_GRCN), length))
 # 1    2    3    4    5    6    7    8    9   10   11   12   13   14   15   16   18   20   21   22   24   26 
@@ -183,7 +188,12 @@ plot(g_GRCN, edge.arrow.size=0.2, vertex.label = NA, mark.groups = cw,
      main="Original Network- Fruchterman Reingold")
 
 
-# doing walktrap is better if it's with smaller groups
+# doing walktrap is better if it's with smaller groups- think how we could subset?
 
+
+
+#consider a subset on cliques instead of clusters? maybe examine cliques of size x
+v<- cliques(g_GRCN)
+v
 
 
