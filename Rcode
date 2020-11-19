@@ -29,6 +29,9 @@ vcount(g_GRCN)
 ## Check whether Self_loops exist, as do multiple edges
 is.simple(g_GRCN)
 
+# should we simplify it?? i think so??? it makes it so much smaller
+g_GRCN<-simplify(g_GRCN, edge.attr.comb="sum")
+summary(g_GRCN)
 
 # check components 
 
@@ -114,9 +117,73 @@ round(cor(meas), 4)
 # betweens_SAP         0.5170          -0.0021         -0.4336       1.0000
 
 
+###########################   clusters    ##############################################
+
+is.connected(g_GRCN, mode = "strong")
+
+clust1s <- clusters(g_GRCN, mode = "strong")
+table(clust1s$csize)  
+# 1    2    3    4    5    6    7    8    9   10   12   14 4158 
+# 1  177   98   30   17   12    8    6    2    1    1    1    1 
+table(clust1s$no)  #355 total clusters
+table(clust1s$membership)
+
+# different cluster sizes
+#get the ones with 2,3, 9 and plot
+
+cs <- which(clust1s$csize == 2)
+cs2 <- el[cs, ]
+ cs <- which(clust1s$csize == 3)
+ cs3 <- el[cs, ]
+ cs <- which(clust1s$csize == 4 | clust1s$csize == 5 | clust1s$csize == 6)
+ cs4 <- el[cs, ]
+
+cs2 <- rbind(cs2, cs3, cs4)
+
+g_GRCN2=graph.data.frame(cs2, directed = FALSE, vertices= NULL)
+
+#g_GRCN2<-simplify(g_GRCN2, edge.attr.comb="sum")  do we need to simplify?
+
+l=layout_with_kk(g_GRCN2)
+plot(g_GRCN2, main = "strong with clusters =2, 3, 4", layout=l)
+
+
+# # Closeness Centrality
+# get.adjacency(g_GRCN, sparse=FALSE)
+# close_SAP <- closeness(g_GRCN)
+# mean(close_SAP)  # not too good
+
+# can we do k means clustering w this??
+g <- g_GRCN2
+M<-as_adjacency_matrix(g, sparse=FALSE)
+
+results <- mst.knn(M)
+
+#igraph::V(results$network)$label.cex <- seq(0.6,0.6,length.out=2)
+
+plot(results$network, vertex.size=8, 
+     vertex.color=igraph::clusters(results$network)$membership, 
+     layout=igraph::layout.fruchterman.reingold(results$network, niter=10000),
+     main=paste("MST-kNN \n Clustering solution \n Number of clusters=",results$cnumber,sep="" ))
 
 
 
+
+
+
+
+
+cw <- walktrap.community(g_GRCN)
+modularity(cw)
+#c.w1 <- membership(cw)
+V(g_GRCN)$size <- 3*(graph.strength(g_GRCN))^(1/3)  #optimal for viewing
+V(g_GRCN)$color <- "lightblue"
+#edge weight-prop
+plot(g_GRCN, edge.arrow.size=0.2, vertex.label = NA, mark.groups = cw, 
+     main="Original Network- Fruchterman Reingold")
+
+
+# doing walktrap is better if it's with smaller groups
 
 
 
