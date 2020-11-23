@@ -30,12 +30,14 @@ vcount(g_GRCN)
 is.simple(g_GRCN)
 
 # should we simplify it?? i think so??? it makes it so much smaller
-g_GRCN<-simplify(g_GRCN, edge.attr.comb="sum")
-summary(g_GRCN)
+g_GRCN_simpl<-simplify(g_GRCN, edge.attr.comb="sum")
+summary(g_GRCN_simpl)
 
-num_weight<-E(g_GRCN)$weight 
+E(g_GRCN_simpl)$weight <-1     #assign 1 to the edge weights
+
+num_weight<-E(g_GRCN_simpl)$weight 
 length(num_weight)    
-E(g_GRCN)$weight <-num_weight  # like this??
+E(g_GRCN_simpl)$weight <-num_weight  # like this??
 
 
 # check components 
