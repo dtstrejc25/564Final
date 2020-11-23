@@ -180,18 +180,22 @@ plot(results$network, vertex.size=8,
 
 
 
-cw <- walktrap.community(g_GRCN)
-modularity(cw)
-#c.w1 <- membership(cw)
-V(g_GRCN)$size <- 3*(graph.strength(g_GRCN))^(1/3)  #optimal for viewing
-V(g_GRCN)$color <- "lightblue"
+# a decent plot of the overall network - simplified
+V(g_GRCN_simpl)$size <- 3*(graph.strength(g_GRCN_simpl))^(1/3)  #optimal for viewing
+V(g_GRCN_simpl)$color <- "lightblue"
+l <- layout_with_kk(g_SAPSub_simpl)
 #edge weight-prop
-plot(g_GRCN, edge.arrow.size=0.2, vertex.label = NA, mark.groups = cw, 
-     main="Original Network- Fruchterman Reingold")
+#edge weight-prop
+E(g_SAPSub_simpl)$weight <- num_weight
+E(g_SAPSub_simpl)$width <- (E(g_SAPSub_simpl)$weight)
+plot(g_GRCN_simpl, edge.arrow.size=0.2, vertex.label = NA,
+     main="Original Network")
 
 
 # doing walktrap is better if it's with smaller groups- think how we could subset?
-
+# cw <- walktrap.community(g_GRCN_simpl)
+# modularity(cw)
+# #c.w1 <- membership(cw)
 
 
 #consider a subset on cliques instead of clusters? maybe examine cliques of size x
