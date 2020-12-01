@@ -104,7 +104,7 @@ barplot(n, xlim= c(1,50), col="blue",
 
 
 
-constraints_SAP <- round(constraint(g_GRCN_simpl, nodes=V(g_GRCN_simpl)), digits=4)
+constraints_SAP <- round(constraint(g_GRCN_simpl, nodes=V(g_GRCN_simpl)), digits=4) #this gives NA if i include it in the correlation matrix so it's out rn
 # Degree centrality
 degree_sap <- degree(g_GRCN_simpl)
 # Node betweenness
@@ -114,8 +114,15 @@ edgebetweens_SAP<-edge.betweenness(g_GRCN_simpl, e=E(g_GRCN_simpl), directed = F
 # Local clustering coefficients
 clustering_SAP <- transitivity(g_GRCN_simpl, type="local", vids=V(g_GRCN_simpl)) 
 
-meas <- cbind(degree_sap, edgebetweens_SAP, constraints_SAP, betweens_SAP)
-round(cor(meas), 4)
+meas <- cbind(degree_sap, edgebetweens_SAP, betweens_SAP)
+round(cor(meas), 3)
+
+# below is original network
+# degree_sap edgebetweens_SAP constraints_SAP betweens_SAP
+# degree_sap           1.0000          -0.0052         -0.6336       0.5170
+# edgebetweens_SAP    -0.0052           1.0000          0.0041      -0.0021
+# constraints_SAP     -0.6336           0.0041          1.0000      -0.4336
+# betweens_SAP         0.5170          -0.0021         -0.4336       1.0000
 
 ###########################   clusters    ##############################################
 
@@ -144,9 +151,8 @@ g_GRCN2=graph.data.frame(cs2, directed = FALSE, vertices= NULL)
 
 #g_GRCN2<-simplify(g_GRCN2, edge.attr.comb="sum")  do we need to simplify?
 
-l=layout_with_kk(g_GRCN2)
-plot(g_GRCN2, main = "strong with clusters =2, 3, 4", layout=l)
-
+l=layout_with_drl(g_GRCN2)
+plot(g_GRCN2, main = "strong with clusters =2, 3, 4", layout=l) #see some bridges to look out for
 
 # Closeness Centrality
 get.adjacency(g_GRCN, sparse=FALSE)
