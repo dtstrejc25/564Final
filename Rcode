@@ -104,24 +104,18 @@ barplot(n, xlim= c(1,50), col="blue",
 
 
 
-
-constraints_SAP <- round(constraint(g_GRCN, nodes=V(g_GRCN)), digits=4)
+constraints_SAP <- round(constraint(g_GRCN_simpl, nodes=V(g_GRCN_simpl)), digits=4)
 # Degree centrality
-degree_sap <- degree(g_GRCN)
+degree_sap <- degree(g_GRCN_simpl)
 # Node betweenness
-betweens_SAP <- round(betweenness(g_GRCN, v=V(g_GRCN), directed = FALSE, nobigint =TRUE, normalized = FALSE))
+betweens_SAP <- round(betweenness(g_GRCN_simpl, v=V(g_GRCN_simpl), directed = FALSE, nobigint =TRUE, normalized = FALSE))
 # Edge betwenness
-edgebetweens_SAP<-edge.betweenness(g_GRCN, e=E(g_GRCN), directed = FALSE)
+edgebetweens_SAP<-edge.betweenness(g_GRCN_simpl, e=E(g_GRCN_simpl), directed = FALSE)
 # Local clustering coefficients
-clustering_SAP <- transitivity(g_GRCN, type="local", vids=V(g_GRCN)) 
+clustering_SAP <- transitivity(g_GRCN_simpl, type="local", vids=V(g_GRCN_simpl)) 
 
 meas <- cbind(degree_sap, edgebetweens_SAP, constraints_SAP, betweens_SAP)
 round(cor(meas), 4)
-# degree_sap edgebetweens_SAP constraints_SAP betweens_SAP
-# degree_sap           1.0000          -0.0052         -0.6336       0.5170
-# edgebetweens_SAP    -0.0052           1.0000          0.0041      -0.0021
-# constraints_SAP     -0.6336           0.0041          1.0000      -0.4336
-# betweens_SAP         0.5170          -0.0021         -0.4336       1.0000
 
 ###########################   clusters    ##############################################
 
