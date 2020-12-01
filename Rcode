@@ -178,8 +178,7 @@ plot(results$network, vertex.size=8,
 
 
 
-
-cw <- walktrap.community(s1)
+cw <- walktrap.community(g_GRCN_simpl)
 modularity(cw)
 #c.w1 <- membership(cw)
 
@@ -192,8 +191,9 @@ V(g_GRCN_simpl)$color <- "lightblue"
 num_weight<-E(g_GRCN_simpl)$weight 
 E(g_GRCN_simpl)$weight <- num_weight
 E(g_GRCN_simpl)$width <- (E(g_GRCN_simpl)$weight)
-plot(g_GRCN_simpl, vertex.label = NA, layout=layout_with_mds(g_GRCN_simpl),
+plot(g_GRCN_simpl, vertex.label = NA, layout=layout_with_mds(g_GRCN_simpl), mark.groups = cw,
      main="Original Network-Simplified")
+
 
 
 summary(num_weight)
