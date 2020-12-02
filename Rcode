@@ -245,16 +245,15 @@ plot(results$network, vertex.size=.8,
      main=paste("MST-kNN \n Clustering solution \n Number of clusters=",results$cnumber,sep="" ))
 
 
-
+############ see if you can get the top (20-30? any number and make it into graph object)
 num_weight<-E(g_GRCN_simpl)$weight
 h<-hub.score(g_GRCN_simpl, scale=FALSE, weights = num_weight)$vector 
 head(sort(h, decreasing=TRUE))
+hd<-head(sort(h,decreasing=TRUE), n = 30)  #here are the nodes
 
-# so now the plot of auth/hub of the network before we split it up by highest hub/auth scores
-auth_score <-authority.score(g_GRCN_simpl, scale=FALSE, weights = num_weight)$vector
-head(sort(auth_score, decreasing=TRUE))
 
 #hub and authorities are same since the graph is undirected
+
 
 
 
