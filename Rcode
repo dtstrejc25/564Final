@@ -254,6 +254,69 @@ hd<-head(sort(h,decreasing=TRUE), n = 30)  #here are the nodes
 
 #hub and authorities are same since the graph is undirected
 
+################### make the hubs into a network themselves ##########
+
+g <- g_GRCN_simpl
+M<-as_adjacency_matrix(g, sparse=FALSE)
+
+dim(M)  #height of the matrix
+h<-c(rep(1, dim(M)[1]))
+h
+# need T(M) so make it into a matrix
+
+TotalIterations<-10
+for (i in 1:TotalIterations) {
+        
+        ### Update authority score- matrix multiplication a= m^T h )
+        #transpose- flip rows --> columns
+        a<-t(M)%*%h     
+        
+        ### Update hub score
+        h <- M%*%a     
+        
+        ## normalizing 
+        ### sum of square of h
+        norm_h<- (t(h)  %*% h)[1]
+        h<- h/ sqrt(norm_h)
+        
+        ### sum of square of a
+        norm_a<- (t(a)  %*% a)[1]
+        a<- a/ sqrt(norm_a)
+        
+}
+
+max(h)
+h
+roww <- which(h==max(h))
+roww
+h[roww, ] #3--- 592540 is the max
 
 
+# get the top 15 hub scores
+hd<-head(sort(h,decreasing=TRUE), n = 15)
+hd
+
+dfnew <- which(h>0.1475)
+dfnew  # these rows we want
+n <- el[dfnew, ]  #only the highest hub scores
+n
+newGHUB=graph.data.frame(n, directed = FALSE, vertices= NULL)
+num_weight<-E(newGHUB)$weight 
+
+table(sapply(maximal.cliques(newGHUB), length))
+
+
+
+
+# i want 25480 to be red and then everything else blue
+V(newGHUB)[7]$color <-"red"
+V(newGHUB)["25480"]$color<-"red"
+
+
+# l <- layout_with_fr(newGHUB)
+# plot(newGHUB, layout=l, vertex.color=v.colors,
+#      vertex.size=.5)
+
+plot(newGHUB, main = "Top 43 Hubs", vertex.size=.3,
+     layout=layout_with_kk(newGHUB), vertex.color=V(newGHUB)$color)
 
