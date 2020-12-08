@@ -1,5 +1,3 @@
-
-
 # clear everything out of memory
 rm(list=ls())  
 getwd()
@@ -9,12 +7,12 @@ myData <- read.table('ca-GrQc.txt.gz')
 str(myData)
 library(igraph)
 library(dplyr)
+library(mstknnclust)
 
 #create graph 
 
 el <- myData
 g_GRCN=graph.data.frame(el, directed = FALSE, vertices= NULL)
-
 
 ################################
 #initial analysis
@@ -34,11 +32,11 @@ is.simple(g_GRCN)
 g_GRCN_simpl<-simplify(g_GRCN, edge.attr.comb="sum")
 summary(g_GRCN_simpl)
 
-E(g_GRCN_simpl)$weight <-1     #assign 1 to the edge weights (why?)
+E(g_GRCN_simpl)$weight <-1     #assign 1 to the edge weights
 
 num_weight<-E(g_GRCN_simpl)$weight 
 length(num_weight)    
-#E(g_GRCN_simpl)$weight <-num_weight  # like this?? #no need this is  unweighted graph 
+E(g_GRCN_simpl)$weight <-num_weight  # like this??
 
 
 # check components 
@@ -54,6 +52,7 @@ transitivity(g_GRCN)  #.6298
 # Avg. path length and diameter
 average.path.length(g_GRCN, directed=FALSE)  #6.0485
 
+mean(betweenness(g_GRCN_simpl))  #8324.96- vertex betweenness
 diameter(g_GRCN, directed = FALSE)  #17
 # Summarize the graph structure
 summary(g_GRCN)  #5242 x 28980 (14484 simplified)
@@ -76,7 +75,7 @@ plot(t / sum(t), xlim=c(1,100), ylim=c(0, 0.28), xlab="Degree", ylab="Frequency"
 deg = degree(g_GRCN)
 P = NULL;
 for (i in 1:max(deg)) {
-  P[i] = length(deg[deg >= i]) / length(deg);
+        P[i] = length(deg[deg >= i]) / length(deg);
 } 
 # ploss ccdf of degree distrbution
 plot(1:max(deg), P, log="xy", type = "l", xlab="Degree", ylab="CCDF", main= "complementary cumulative distribution function (CCDF)")
@@ -94,15 +93,15 @@ G.degree.histogram[,1] <- as.numeric(G.degree.histogram[,1])
 
 # Now, plot it!
 ggplot(G.degree.histogram, aes(x = G.degrees, y = Freq)) +
-  geom_point() +
-  scale_x_continuous("Degree\n(nodes with this amount of connections)",
-                     breaks = c(1, 3, 10, 30, 100, 300),
-                     trans = "log10") +
-  scale_y_continuous("Frequency\n(how many of them)",
-                     breaks = c(1, 3, 10, 30, 100, 300, 1000),
-                     trans = "log10") +
-  ggtitle("Degree Distribution (log-log)") +
-  theme_bw()
+        geom_point() +
+        scale_x_continuous("Degree\n(nodes with this amount of connections)",
+                           breaks = c(1, 3, 10, 30, 100, 300),
+                           trans = "log10") +
+        scale_y_continuous("Frequency\n(how many of them)",
+                           breaks = c(1, 3, 10, 30, 100, 300, 1000),
+                           trans = "log10") +
+        ggtitle("Degree Distribution (log-log)") +
+        theme_bw()
 
 
 mean(G.degrees)
@@ -118,27 +117,27 @@ summary (round(g_betw, 2))
 
 #You may plot the Lorenz curve, with a straight line representing the equidistribution case, as follows:
 lorenz = function(d) {
-  d = sort(d, dec=TRUE)
-  n = length(d);
-  s = sum(d);
-  p = seq(0, 1, 0.01);
-  c = NULL;
-  items = NULL;
-  i = 1;
-  for (x in p) {
-    if (x == 0)  {
-      items[i] = 0;
-      c[i] = 0;
-    } else { 
-      items[i] = floor(n * x);
-      c[i] = sum(d[1:items[i]]) / s;
-    }  
-    i = i + 1;
-  }
-  names(c) = p
-  list = list(p = p, c = c, items = items); 
+        d = sort(d, dec=TRUE)
+        n = length(d);
+        s = sum(d);
+        p = seq(0, 1, 0.01);
+        c = NULL;
+        items = NULL;
+        i = 1;
+        for (x in p) {
+                if (x == 0)  {
+                        items[i] = 0;
+                        c[i] = 0;
+                } else { 
+                        items[i] = floor(n * x);
+                        c[i] = sum(d[1:items[i]]) / s;
+                }  
+                i = i + 1;
+        }
+        names(c) = p
+        list = list(p = p, c = c, items = items); 
 } 
-  r = lorenz(degree(g_GRCN))
+r = lorenz(degree(g_GRCN))
 plot(r$p, r$c, type="l", lwd=3, xlab="percentage of top units", ylab="percentage of character", xlim=c(0,1), ylim=c(0,1));
 curve(x+0, lty = 1, xlim=c(0,1), ylim=c(0,1), add=T);
 #######################
@@ -159,8 +158,6 @@ graph.edge.betweenness
 
 graph.closeness<-closeness(g_GRCN,vids=V(g_GRCN))
 graph.closeness
-
-
 
 
 table(sapply(maximal.cliques(g_GRCN), length))
@@ -208,9 +205,30 @@ barplot(n, xlim= c(1,50), col="blue",
         xlab= "Number of connections", main="Frequency of degrees in network- removing zeroes")
 
 
+#more measures
 
-constraints_SAP <- round(constraint(g_GRCN_simpl, nodes=V(g_GRCN_simpl)), digits=4) #this gives NA if i include it in the correlation matrix so it's out rn
+constraints_SAP <- round(constraint(g_GRCN, nodes=V(g_GRCN)), digits=4)
 # Degree centrality
+degree_sap <- degree(g_GRCN)
+# Node betweenness
+betweens_SAP <- round(betweenness(g_GRCN, v=V(g_GRCN), directed = FALSE, nobigint =TRUE, normalized = FALSE))
+# Edge betwenness
+edgebetweens_SAP<-edge.betweenness(g_GRCN, e=E(g_GRCN), directed = FALSE)
+# Local clustering coefficients
+clustering_SAP <- transitivity(g_GRCN, type="local", vids=V(g_GRCN)) 
+
+meas <- cbind(degree_sap, edgebetweens_SAP, betweens_SAP, constraints_SAP)
+round(cor(meas), 4)
+
+
+# below is original network
+#                       degree_sap edgebetweens_SAP constraints_SAP betweens_SAP
+# degree_sap           1.0000          -0.0052         -0.6336       0.5170
+# edgebetweens_SAP    -0.0052           1.0000          0.0041      -0.0021
+# constraints_SAP     -0.6336           0.0041          1.0000      -0.4336
+# betweens_SAP         0.5170          -0.0021         -0.4336       1.0000
+
+
 degree_sap <- degree(g_GRCN_simpl)
 # Node betweenness
 betweens_SAP <- round(betweenness(g_GRCN_simpl, v=V(g_GRCN_simpl), directed = FALSE, nobigint =TRUE, normalized = FALSE))
@@ -222,13 +240,11 @@ clustering_SAP <- transitivity(g_GRCN_simpl, type="local", vids=V(g_GRCN_simpl))
 meas <- cbind(degree_sap, edgebetweens_SAP, betweens_SAP)
 round(cor(meas), 3)
 
-# below is original network
-# degree_sap edgebetweens_SAP constraints_SAP betweens_SAP
-# degree_sap           1.0000          -0.0052         -0.6336       0.5170
-# edgebetweens_SAP    -0.0052           1.0000          0.0041      -0.0021
-# constraints_SAP     -0.6336           0.0041          1.0000      -0.4336
-# betweens_SAP         0.5170          -0.0021         -0.4336       1.0000
-
+#this is for simplified
+#                       degree_sap edgebetweens_SAP betweens_SAP
+# degree_sap            1.000            0.010        0.516
+# edgebetweens_SAP      0.010            1.000        0.018
+# betweens_SAP          0.516            0.018        1.000
 ###########################   clusters    ##############################################
 
 is.connected(g_GRCN_simpl, mode = "strong")
@@ -238,11 +254,11 @@ table(clust1s$csize)
 # 1    2    3    4    5    6    7    8    9   10   12   14 4158 
 # 1  177   98   30   17   12    8    6    2    1    1    1    1 
 table(clust1s$no)  #355 total clusters
-#table(clust1s$membership)
+table(clust1s$membership)
 
 # different cluster sizes
-#get the ones with 2,3, 9 and plot
-
+#get the ones with 2,3, 4 and plot
+# 
 cs <- which(clust1s$csize == 2)
 cs2 <- el[cs, ]
 cs <- which(clust1s$csize == 3)
@@ -252,68 +268,75 @@ cs4 <- el[cs, ]
 
 cs2 <- rbind(cs2, cs3, cs4)
 
+g_GRCN2<-induced_subgraph(g_GRCN_simpl, v= clust1s$csize == 2)
+
+
 g_GRCN2=graph.data.frame(cs2, directed = FALSE, vertices= NULL)
 
 #g_GRCN2<-simplify(g_GRCN2, edge.attr.comb="sum")  do we need to simplify?
 
-l=layout_with_drl(g_GRCN2)
-plot(g_GRCN2, main = "strong with clusters =2, 3, 4", layout=l) #see some bridges to look out for
+l=layout_with_mds(g_GRCN2)
+plot(g_GRCN2, main = "strong with clusters =2, 3, 4", layout=l,
+     vertex.size=3, vertex.label.cex=.9, vertex.label.dist=1.3) #see some bridges to look out for
 
-# Closeness Centrality
-get.adjacency(g_GRCN, sparse=FALSE)
-close_SAP <- closeness(g_GRCN)
-mean(close_SAP)  # not too good
+vcount(g_GRCN2)
+# 
+# # Closeness Centrality
+# get.adjacency(g_GRCN_simpl, sparse=FALSE)
+# close_SAP <- closeness(g_GRCN_simpl)
+# mean(close_SAP)  # not too good
 
-# can we do k means clustering w this??
+# try mst knn to see connectivity potential in a smaller subgroup
 g <- g_GRCN2
 M<-as_adjacency_matrix(g, sparse=FALSE)
-
+g
 results <- mst.knn(M)
 
 #igraph::V(results$network)$label.cex <- seq(0.6,0.6,length.out=2)
 
 plot(results$network, vertex.size=8, 
      vertex.color=igraph::clusters(results$network)$membership, 
-     layout=igraph::layout.fruchterman.reingold(results$network, niter=10000),
-     main=paste("MST-kNN \n Clustering solution \n Number of clusters=",results$cnumber,sep="" ))
+     layout=igraph::layout.fruchterman.reingold(results$network, niter=10000), vertex.label= NA,
+     main=paste("MST-kNN \n Clustering solution \n Number of clusters=",results$cnumber,sep=""))    #just shows how much of the network is connected
 
 
 
+###### top hubs
+h<-hub.score(g_GRCN_simpl, scale=FALSE, weights = num_weight)$vector
+
+hd<-head(sort(h,decreasing=TRUE), n = 15)
+hd
 
 
-
-
-cw <- walktrap.community(g_GRCN_simpl)
-modularity(cw)
-#c.w1 <- membership(cw)
 
 # a decent plot of the overall network - simplified
 V(g_GRCN_simpl)$size <- 3*(graph.strength(g_GRCN_simpl))^(1/3)  #optimal for viewing
-V(g_GRCN_simpl)$color <- "lightblue"
-#l <- layout_with_kk(g_GRCN)
-#edge weight-prop
-#edge weight-prop
+
 num_weight<-E(g_GRCN_simpl)$weight 
 E(g_GRCN_simpl)$weight <- num_weight
 E(g_GRCN_simpl)$width <- (E(g_GRCN_simpl)$weight)
-plot(g_GRCN_simpl, vertex.label = NA, layout=layout_with_mds(g_GRCN_simpl), mark.groups = cw,
-     main="Original Network-Simplified")
+plot(g_GRCN_simpl, vertex.label = NA, layout=layout_with_kk(g_GRCN_simpl),
+     main="Original Network-Simplified- KK")
+plot(g_GRCN_simpl, vertex.label = NA, layout=layout_with_mds(g_GRCN_simpl),
+     main="Original Network-Simplified- MDS")
+plot(g_GRCN_simpl, vertex.label = NA, layout=layout_with_drl(g_GRCN_simpl),
+     main="Original Network-Simplified- DrL")
 
 
-
-summary(num_weight)
 
 # doing walktrap is better if it's with smaller groups
+cw <- walktrap.community(g_GRCN2)
+modularity(cw)
+plot(g_GRCN2, vertex.label = NA, layout=layout_with_fr(g_GRCN2), mark.groups= cw, vertex.size=.7,
+     main="Nodes in Clusters of Size 2, 3, or 4")
 
 
 
 #consider a subset on cliques instead of clusters?
 v<- count_max_cliques(g_GRCN_simpl)
-v  #they are part of  the largest clique
+v  #they are part of  the largest clique-3906
 
-
-g_GRCN
-
+# subgraph with only the largest clique
 # just looking at the largest clique
 s1<-induced_subgraph(g_GRCN_simpl, v= largest.cliques(g_GRCN_simpl)[[1]])
 s1
@@ -321,46 +344,40 @@ l=layout_with_gem(s1)
 
 V(s1)$size <- 3*(graph.strength(s1))^(1/3)  #optimal for viewing
 V(s1)$color <- "lightblue"
-#l <- layout_with_kk(g_GRCN)
-#edge weight-prop
-#edge weight-prop
+
 num_weight<-E(s1)$weight 
 E(s1)$weight <- num_weight
 E(s1)$width <- (E(s1)$weight)
 plot(s1, vertex.label = NA, layout=l,
      main="Largest Clique In Network-GEM layout")
 
-#all the weights are the same...
 
+############ how big should we make our top hub subset? ###############
+# we want to compare it the BEST possible subgroup of the original
+#random number 1-5242. get 22 of them
 
-# subgraph with only the largest clique
-edge_density(g_GRCN_simpl)
-mean(degree(s1))
+#plot the graph density value as the sample size increases
+set.seed(134)
+j<- seq(1, 14, by = 1) #settle on <100 since after that it does not get any better
+val = rep(0, length(j))
 
-g <- g_GRCN_simpl   #this looks bad consider only subgroups for this viz
-M<-as_adjacency_matrix(g, sparse=FALSE)
+for (i in 1:length(j)) {
+        xn<- sample(1:5242,j[i],replace=FALSE)
+        rand<-induced_subgraph(g_GRCN_simpl, v= xn)
+        val[i]<-graph.density(rand)
+        
+}
+plot(j, val, main="graph density of random subset by vertex number",
+     xlab="vertices in subgroup", ylab="graph density", col="blue")
+# table(j,val)
+#the best graph density is around .015 achieved around 14-15 vertices
+set.seed(121)
+xn<- sample(1:5242,14,replace=FALSE)
+rand<-induced_subgraph(g_GRCN_simpl, v= xn)
 
-results <- mst.knn(M)
+plot(rand, vertex.label.dist=1)  #
 
-#igraph::V(results$network)$label.cex <- seq(0.6,0.6,length.out=2)
-
-plot(results$network, vertex.size=.8, 
-     vertex.color=igraph::clusters(results$network)$membership, 
-     layout=igraph::layout.fruchterman.reingold(results$network, niter=10000),
-     main=paste("MST-kNN \n Clustering solution \n Number of clusters=",results$cnumber,sep="" ))
-
-
-############ see if you can get the top (20-30? any number and make it into graph object)
-num_weight<-E(g_GRCN_simpl)$weight
-h<-hub.score(g_GRCN_simpl, scale=FALSE, weights = num_weight)$vector 
-head(sort(h, decreasing=TRUE))
-hd<-head(sort(h,decreasing=TRUE), n = 30)  #here are the nodes
-
-
-#hub and authorities are same since the graph is undirected
-
-################### make the hubs into a network themselves ##########
-
+############################ hub and authority scores ######################
 g <- g_GRCN_simpl
 M<-as_adjacency_matrix(g, sparse=FALSE)
 
@@ -394,34 +411,89 @@ max(h)
 h
 roww <- which(h==max(h))
 roww
-h[roww, ] #3--- 592540 is the max
+h[roww, ] #--- 21012 is the max
 
 
 # get the top 15 hub scores
 hd<-head(sort(h,decreasing=TRUE), n = 15)
 hd
 
-dfnew <- which(h>0.1475)
+dfnew <- which(h>.147)  #.147 gives 15  and .1381 gives 44
 dfnew  # these rows we want
-n <- el[dfnew, ]  #only the highest hub scores
-n
-newGHUB=graph.data.frame(n, directed = FALSE, vertices= NULL)
-num_weight<-E(newGHUB)$weight 
 
-table(sapply(maximal.cliques(newGHUB), length))
+newGHUB <- induced_subgraph(g_GRCN_simpl, v= dfnew)
+plot(newGHUB, layout_with_kk(newGHUB), vertex.size=2, vertex.label.cex=.9, 
+     vertex.label.dist=1.3, main="Top 15 Hubs") #it is fully connected with just the top ones
+
+graph.density(newGHUB)
+
+###### now get the top 44 to see how it compares to the clique we found earlier!
+dfnew <- which(h>0.1381)
+newGHUB <- induced_subgraph(g_GRCN_simpl, v= dfnew)
+
+plot(newGHUB, layout_with_mds(newGHUB), vertex.size=8,
+     main="Top 44 hubs", vertex.label=NA) #it is fully connected with just the top ones
+
+#just for insight do top 60 hubs
+dfnew <- which(h>0.02)
+newGHUB60 <- induced_subgraph(g_GRCN_simpl, v= dfnew)
+
+plot(newGHUB60, layout_with_mds(newGHUB60), vertex.size=8,
+     main="Top 60 hubs", vertex.label=NA) 
+
+table(sapply(maximal.cliques(newGHUB), length)) 
+# 43 2 
+table(sapply(maximal.cliques(newGHUB60), length)) 
+#
+table(sapply(maximal.cliques(g_GRCN_simpl), length))
+
+######3 neighbors of the top hubs- how does it trend?
+neighbors(g_GRCN_simpl, v=c('21012'), mode = "all") 
+neighbors(g_GRCN_simpl, v=c('2741'), mode = "all") 
+neighbors(g_GRCN_simpl, v=c('12365'), mode = "all") 
+neighbors(g_GRCN_simpl, v=c('21508'), mode = "all") 
+neighbors(g_GRCN_simpl, v=c('9785'), mode = "all") 
+neighbors(g_GRCN_simpl, v=c('15003'), mode = "all") 
 
 
 
+graph.density(g_GRCN_simpl)
+graph.density(newGHUB)   #.9989 with 44......still super high
+graph.density(g_GRCN2)
+graph.density(newGHUB60) #.65254 still very high compared to the original
 
-# i want 25480 to be red and then everything else blue
-V(newGHUB)[7]$color <-"red"
-V(newGHUB)["25480"]$color<-"red"
+
+cw <- walktrap.community(g_GRCN_simpl)
+modularity(cw) #0.7823644
+cw <- walktrap.community(newGHUB)
+modularity(cw) #0.8469388
+cw <- walktrap.community(rand)
+modularity(cw) #0
+cw <- walktrap.community(newGHUB60)
+modularity(cw) #0.04468397
+
+cw <- fastgreedy.community(g_GRCN_simpl)
+modularity(cw) # 0.8197796
+cw <- fastgreedy.community(newGHUB)
+modularity(cw) #0.8469388
+cw <- fastgreedy.community(rand)
+modularity(cw) #0
+cw <- fastgreedy.community(newGHUB60)
+modularity(cw)  #.08272858
 
 
-# l <- layout_with_fr(newGHUB)
-# plot(newGHUB, layout=l, vertex.color=v.colors,
-#      vertex.size=.5)
 
-plot(newGHUB, main = "Top 43 Hubs", vertex.size=.3,
-     layout=layout_with_kk(newGHUB), vertex.color=V(newGHUB)$color)
+#extra
+g <- newGHUB60
+M<-as_adjacency_matrix(g, sparse=FALSE)
+g
+results <- mst.knn(M)
+
+#igraph::V(results$network)$label.cex <- seq(0.6,0.6,length.out=2)
+
+plot(results$network, vertex.size=8, 
+     vertex.color=igraph::clusters(results$network)$membership, 
+     layout=igraph::layout.fruchterman.reingold(results$network, niter=10000), vertex.label= NA,
+     main=paste("MST-kNN \n Top 60 Hubs Clustering solution \n Number of clusters=",results$cnumber,sep=""))    #just shows how much of the network is connected
+
 
